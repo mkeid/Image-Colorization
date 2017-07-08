@@ -10,10 +10,6 @@ class Generator(nn.Module):
         self.noise_size = noise_size
         self.image_size = image_size
 
-        # Noise projection
-        self.project = nn.Linear(self.noise_size, self.image_size * self.image_size)
-        self.norm0 = nn.BatchNorm2d(1)
-
         # Activation for each block
         self.relu = nn.ReLU()
 
@@ -45,18 +41,15 @@ class Generator(nn.Module):
         self.tanh = nn.Tanh()
 
     def forward(self, noise, y):
-        noise = self.project(noise).view(-1, 1, self.image_size, self.image_size)
-        noise = self.norm0(noise)
-        noise = self.relu(noise)
         x = torch.cat([y, noise], 1)
 
         for i in range(1, 7):
             x = self.conv_block(y, x, i, (i == 6))
 
-        return torch.cat([y, x], 1)
+        return torch.cat([x, y], 1)
 
     def conv_block(self, y, x, block, last=False):
-        x = torch.cat([y, x], 1)
+        x = torch.cat([x, y], 1)
         conv = getattr(self, "conv{}".format(block))
         x = conv(x)
 

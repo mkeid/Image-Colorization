@@ -19,9 +19,10 @@ parser.add_argument('--learning-rate-d', default=.0002)
 parser.add_argument('--learning-rate-g', default=.0001)
 parser.add_argument('--adam-beta1', default=.5)
 parser.add_argument('--noise-size', default=100)
+parser.add_argument('--test-image', default='data/bird.jpg')
 
 parser.add_argument('--nlog', default=100)
-parser.add_argument('--nrender', default=500)
+parser.add_argument('--nrender', default=1)
 parser.add_argument('--nsave', default=1000)
 args = parser.parse_args()
 
@@ -45,14 +46,17 @@ def save_models():
     print("Model states have been saved to the data directory.")
 
 
+# Begin training cycle
 g_losses = np.empty(0)
 d_losses = np.empty(0)
+print("Beginning training..")
+
 for epoch in range(args.epochs):
     # Train discriminator
     d_opt.zero_grad()
 
     d_examples, d_targets = loader.next_batch()
-    d_noise = torch.Tensor(args.batch_size, args.noise_size).uniform_(-1., 1.)
+    d_noise = torch.Tensor(args.batch_size, 1, args.image_size, args.image_size).uniform_(-1., 1.)
     d_noise = Variable(d_noise).cuda()
     d_samples = g_net(d_noise, d_examples)
     d_real_pred = d_net(d_targets)
@@ -67,7 +71,7 @@ for epoch in range(args.epochs):
     g_opt.zero_grad()
 
     g_examples, _ = loader.next_batch()
-    g_noise = torch.Tensor(args.batch_size, args.noise_size).uniform_(-1., 1.)
+    g_noise = torch.Tensor(args.batch_size, 1, args.image_size, args.image_size).uniform_(-1., 1.)
     g_noise = Variable(g_noise).cuda()
     g_samples = g_net(g_noise, g_examples)
     g_pred = d_net(g_samples)
@@ -90,13 +94,19 @@ for epoch in range(args.epochs):
         n_losses = np.empty(0)
 
     if not epoch % args.nrender:
-        img = Image.open('/home/mo/Desktop/bird.jpg')
-        img = loader.rgb2yuv(img)
-        z = torch.Tensor(1, args.noise_size).uniform_(-1., 1.)
-        sample = g_net(img)
-        sample = loader.yuv2rgb(sample)
-        new_img = Image.fromarray(sample)
-        new_img.save('output/sample.jpg')
+        img = Image.open(args.test_image)
+        img = img.convert('HSV')
+        img = loader.toTensor(img)
+        img_shape = img.size()
+        img = Variable(img).cuda()
+        img = img[-1].unsqueeze(0).unsqueeze(0)
+
+        z = torch.Tensor(1, 1, img_shape[1], img_shape[2]).uniform_(-1., 1.)
+        z = Variable(z).cuda()
+
+        sample = g_net(z, img)
+        sample = loader.toPIL(sample.squeeze(0).data.cpu())
+        sample.save('output/sample.jpg')
 
     if not epoch % args.nsave:
         save_models()
