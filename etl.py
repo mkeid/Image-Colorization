@@ -17,19 +17,25 @@ class ETL:
             transforms.RandomHorizontalFlip(),
             transforms.Scale(self.image_size),
             transforms.CenterCrop(self.image_size),
-       ])
-        cap = dset.ImageFolder('data/training', transform=transform)
+            transforms.ToTensor()
+        ])
+        self.dataset = dset.ImageFolder('/home/mo/Datasets/coco/', transform=transform)
 
-        self.loader = iter(DataLoader(cap, self.batch_size))
-        self.n_examples = len(cap)
+        self.loader = iter(DataLoader(self.dataset, self.batch_size))
+        self.n_examples = len(self.dataset)
         self.pool = Pool()
 
     def next_batch(self):
-        images = next(self.loader)
-        images = self.pool.map(self.rgb2yuv, images)
+        images = next(self.loader)[0]
+
+        for i in range(self.batch_size):
+            image = images[i].transpose(0, 2).numpy()
+            image = self.rgb2yuv(image)
+            images[i] = torch.from_numpy(image).view(3, self.image_size, self.image_size)
+
         images = torch.Tensor(images)
-        y = images[:, :, :, 0].unsqueeze(-1)
-        return y, images
+        y = images[:, 0].unsqueeze(1)
+        return Variable(y).cuda(), Variable(images).cuda()
 
     def rgb2yuv(self, image):
         cvt_matrix = np.array([[0.299, -0.169, 0.5],

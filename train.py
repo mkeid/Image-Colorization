@@ -6,6 +6,7 @@ import torch.optim as optim
 from discriminator import Discriminator
 from generator import Generator
 from etl import ETL
+from torch.autograd import Variable
 
 from PIL import Image
 
@@ -51,9 +52,10 @@ for epoch in range(args.epochs):
     d_opt.zero_grad()
 
     d_examples, d_targets = loader.next_batch()
-    d_noise = torch.Tensor(args.batch_size, args.noise_size).uniform(-1., 1.)
+    d_noise = torch.Tensor(args.batch_size, args.noise_size).uniform_(-1., 1.)
+    d_noise = Variable(d_noise).cuda()
     d_samples = g_net(d_noise, d_examples)
-    d_real_pred = d_net(d_examples)
+    d_real_pred = d_net(d_targets)
     d_fake_pred = d_net(d_samples)
 
     d_loss = -torch.mean(d_real_pred - d_fake_pred)
@@ -66,6 +68,7 @@ for epoch in range(args.epochs):
 
     g_examples, _ = loader.next_batch()
     g_noise = torch.Tensor(args.batch_size, args.noise_size).uniform_(-1., 1.)
+    g_noise = Variable(g_noise).cuda()
     g_samples = g_net(g_noise, g_examples)
     g_pred = d_net(g_samples)
 
