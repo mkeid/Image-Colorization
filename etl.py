@@ -1,17 +1,52 @@
+import numpy as np
 import torch
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
 from itertools import tee
+from PIL import Image
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 
+class ToPILImage(object):
+    """
+    Converts a torch.*Tensor of shape C x H x W or a numpy ndarray of shape
+    H x W x C to a PIL.Image while preserving the value range.
+    """
+
+    def __call__(self, pic):
+        """
+        Args:
+            pic (Tensor or numpy.ndarray): Image to be converted to PIL.Image.
+        Returns:
+            PIL.Image: Image converted to PIL.Image.
+        """
+
+        npimg = pic
+
+        if isinstance(pic, torch.FloatTensor):
+            pic = pic.mul(255).byte()
+
+        if torch.is_tensor(pic):
+            npimg = np.transpose(pic.numpy(), (1, 2, 0))
+
+        assert isinstance(npimg, np.ndarray), 'pic should be Tensor or ndarray'
+
+        if npimg.shape[2] == 1:
+            npimg = npimg[:, :, 0]
+
+        return Image.fromarray(npimg, mode='HSV')
+
+
 class ETL:
-    toPIL = transforms.ToPILImage()
+    """
+    Responsible for data extraction, transformation and loading.
+    """
+
+    toPIL = ToPILImage()
     toTensor = transforms.ToTensor()
 
     def __init__(self, batch_size, image_size, training_dir):
-        # Keep params
         self.batch_size = batch_size
         self.image_size = image_size
 
@@ -21,12 +56,18 @@ class ETL:
             transforms.CenterCrop(self.image_size),
             transforms.ToTensor()
         ])
-        self.dataset = dset.ImageFolder(training_dir, transform=transform)
 
+        self.dataset = dset.ImageFolder(training_dir, transform=transform)
         self.loader = iter(DataLoader(self.dataset, self.batch_size, shuffle=True, drop_last=True))
         self.loader, self.loader_backup = tee(self.loader)
 
     def next_batch(self):
+        """
+        Retrieves next batch of examples.
+        
+        :return: (grayscale example tensors, color label tensors)
+        """
+
         try:
             images = next(self.loader)[0]
         except StopIteration:
@@ -38,7 +79,8 @@ class ETL:
         for i in range(self.batch_size):
             image = self.toPIL(images[i])
             image = image.convert('HSV')
-            images[i] = (self.toTensor(image) - .5) * 2
+            image = (self.toTensor(image) - .5) * 2
+            images[i] = image
 
         images = torch.Tensor(images)
         y = images[:, -1].unsqueeze(1)
@@ -46,7 +88,17 @@ class ETL:
 
     @staticmethod
     def save_models(g_net, d_net):
+        """
+        Saves states of generator and discriminator.
+        
+        :param g_net: generator module
+        :param d_net: discriminator module
+        """
+
         print("Saving models..")
         torch.save(g_net.state_dict(), 'data/generator_state')
         torch.save(d_net.state_dict(), 'data/discriminator_state')
         print("Model states have been saved to the data directory.")
+
+
+
