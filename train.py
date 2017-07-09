@@ -22,7 +22,7 @@ parser.add_argument('--k-generator', default=1, help='Number of times to train g
 parser.add_argument('--learning-rate-d', default=.0002, help='Learning rate for discriminator optimizer.')
 parser.add_argument('--learning-rate-g', default=.0001, help='Learning rate for generator optimizer.')
 parser.add_argument('--noise-size', default=100)
-parser.add_argument('--optimizer', default='RMSProp', help='[RMSProp, Adam]')
+parser.add_argument('--optimizer', default='RMSProp', choices=['RMSProp', 'Adam'], help='[RMSProp, Adam]')
 parser.add_argument('--rmsprop-decay', default=.9)
 parser.add_argument('--test-image', default=None)
 
@@ -37,14 +37,14 @@ g_net = Generator().cuda()
 if args.optimizer == 'RMSProp':
     g_opt = optim.RMSprop(g_net.parameters(), args.learning_rate_d, weight_decay=args.rmsprop_decay)
 elif args.optimizer == 'Adam':
-    g_opt = optim.RMSprop(g_net.parameters(), args.learning_rate_d, (args.adam_beta1, .999))
+    g_opt = optim.Adam(g_net.parameters(), args.learning_rate_d, (args.adam_beta1, .999))
 g_losses = np.empty(0)
 
 d_net = Discriminator().cuda()
 if args.optimizer == 'RMSProp':
     d_opt = optim.RMSprop(d_net.parameters(), args.learning_rate_d, weight_decay=args.rmsprop_decay)
 elif args.optimizer == 'Adam':
-    d_opt = optim.RMSprop(d_net.parameters(), args.learning_rate_d, (args.adam_beta1, .999))
+    d_opt = optim.Adam(d_net.parameters(), args.learning_rate_d, (args.adam_beta1, .999))
 d_losses = np.empty(0)
 
 if args.retrain:

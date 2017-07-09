@@ -17,9 +17,9 @@ class ToPILImage(object):
     def __call__(self, pic):
         """
         Args:
-            pic (Tensor or numpy.ndarray): Image to be converted to PIL.Image.
+            pic (Tensor) :   Image to be converted to PIL.Image.
         Returns:
-            PIL.Image: Image converted to PIL.Image.
+            PIL.Image    :   Image converted to PIL.Image.
         """
 
         npimg = pic
@@ -65,7 +65,8 @@ class ETL:
         """
         Retrieves next batch of examples.
         
-        :return: (grayscale example tensors, color label tensors)
+        Returns: 
+            Tensor, Tensor  :   (grayscale examples, color labels)
         """
 
         try:
@@ -91,8 +92,9 @@ class ETL:
         """
         Saves states of generator and discriminator.
         
-        :param g_net: generator module
-        :param d_net: discriminator module
+        Args:
+            g_net (nn.Module)   :   The generative model.
+            d_net (nn.Module)   :   The discriminative model.
         """
 
         print("Saving models..")
