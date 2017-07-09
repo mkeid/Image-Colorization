@@ -24,14 +24,16 @@ class Discriminator(nn.Module):
         self.norm4 = nn.BatchNorm2d(512)
 
         # Prediction
-        self.prediction = nn.Linear(512, 1)
+        self.project = nn.Linear(512, 64)
+        self.predict = nn.Linear(64, 1)
 
     def forward(self, x):
         for i in range(1, 5):
             x = self.conv_block(x, i, (i > 1))
 
         x = x.view(-1, 512)
-        return self.prediction(x)
+        x = self.project(x)
+        return self.predict(x)
 
     def conv_block(self, x, block, norm=True):
         conv = getattr(self, "conv{}".format(block))

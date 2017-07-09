@@ -3,12 +3,8 @@ import torch.nn as nn
 
 
 class Generator(nn.Module):
-    def __init__(self, noise_size, image_size):
+    def __init__(self):
         super(Generator, self).__init__()
-
-        # Keep params
-        self.noise_size = noise_size
-        self.image_size = image_size
 
         # Activation for each block
         self.relu = nn.ReLU()
