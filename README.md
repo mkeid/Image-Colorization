@@ -1,6 +1,6 @@
 # *Image-Colorization* via Generative Adversarial Networks
 
-<img src="data/cover.jpg" height="480px" width="640px" align="right">
+<img src="data/results/cover.jpg" height="480px" width="640px" align="right">
 
 This is a PyTorch implementation of *[Unsupervised Diverse Colorization via
 Generative Adversarial Networks](https://arxiv.org/pdf/1702.06674.pdf)* which makes use of [batch normalization](https://arxiv.org/pdf/1502.03167v3.pdf) and [conditional concatenation](https://web.eecs.umich.edu/~honglak/icml2016-crelu-full.pdf) to improve upon [other published implementations](http://cs231n.stanford.edu/reports/2016/pdfs/224_Report.pdf) in terms of training efficiency and evaluation results.
@@ -15,3 +15,64 @@ A pair of [generative](https://en.wikipedia.org/wiki/Generative_model) and [disc
 The generator is given uniform noise as input and is conditioned on the value channel of some given image. This conditioning gives rise ot the [conditional GAN](https://arxiv.org/pdf/1411.1784.pdf) architecture.
 Unlike former image colorizer proposals, this generator is conditioned on the input at each convolutional block. This vastly improves the training procedure.
 
+## Results
+
+<table style="width:100%">
+
+  <tr>
+    <th>Input</th>
+    <th>Output</th>
+    <th>Target</th>
+  </tr>
+  
+  <tr>
+    <td><img src="data/results/" height="194px" width="194px"></td>
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+  </tr>
+  
+  <tr>
+    <td><img src="data/results/" height="194px" width="194px"></td>
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+  </tr>
+  
+  <tr>
+    <td><img src="data/results/" height="194px" width="194px"></td>
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+  </tr>
+  
+  <tr>
+    <td><img src="data/results/" height="194px" width="194px"></td>
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+  </tr>
+  
+  <tr>
+    <td><img src="data/results/" height="194px" width="194px"></td>
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+    <td><img src="data/results/" height="194px" width="194px"></td> 
+  </tr>
+  
+</table>
+
+## Prerequisites
+
+* [Python 3.5](https://www.python.org/downloads/release/python-350/)
+* [PyTorch](http://pytorch.org/)
+* [MSCOCO API](https://github.com/pdollar/coco)
+* [NumPy](http://www.numpy.org/)
+* [PIL](http://www.pythonware.com/products/pil/)
+
+## Usage
+
+```
+python train.py
+```
+
+```
+python3 eval.py
+```
+
+## Files

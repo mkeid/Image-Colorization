@@ -80,12 +80,13 @@ class ETL:
         for i in range(self.batch_size):
             image = self.toPIL(images[i])
             image = image.convert('HSV')
-            image = (self.toTensor(image) - .5) * 2
+            image = self.toTensor(image)
+            image = (image - .5) * 2
             images[i] = image
 
         images = torch.Tensor(images)
-        y = images[:, -1].unsqueeze(1)
-        return Variable(y).cuda(), Variable(images).cuda()
+        v = images[:, -1].unsqueeze(1)
+        return Variable(v).cuda(), Variable(images).cuda()
 
     @staticmethod
     def save_models(g_net, d_net):
@@ -98,8 +99,8 @@ class ETL:
         """
 
         print("Saving models..")
-        torch.save(g_net.state_dict(), 'data/generator_state')
-        torch.save(d_net.state_dict(), 'data/discriminator_state')
+        torch.save(g_net.state_dict(), '../data/generator_state')
+        torch.save(d_net.state_dict(), '../data/discriminator_state')
         print("Model states have been saved to the data directory.")
 
 

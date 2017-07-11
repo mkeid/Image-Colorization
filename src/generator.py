@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.init as init
+from etl import ETL
+from PIL import Image
+from torch.autograd import Variable
 
 
 class Generator(nn.Module):
@@ -53,15 +56,39 @@ class Generator(nn.Module):
             Tensor          :   Three-channel encoding representing image in HSV.
         """
 
-        x = torch.cat([v, noise], 1)
+        x = torch.cat([noise, v], 1)
 
         for i in range(1, 7):
-            x = self.conv_block(x, v, i, (i == 6))
+            x = self._conv_block(x, v, i, (i == 6))
 
         x = self.tanh(x)
         return torch.cat([x, v], 1)
 
-    def conv_block(self, x, v, block, last=False):
+    def render(self, path, out):
+        """
+        Colorizes an image given its image path and saves it.
+        
+        Args:
+            path (str)  :   Path of image to colorize.
+            out (str)   :   Output path for rendered image.
+        """
+
+        img = Image.open(path).convert('HSV')
+        img = (ETL.toTensor(img) - .5) * 2.
+        img_shape = img.size()
+        img = Variable(img).cuda()
+        img = img[-1].unsqueeze(0).unsqueeze(0)
+
+        z = torch.Tensor(1, 1, img_shape[1], img_shape[2]).uniform_(-1., 1.)
+        z = Variable(z).cuda()
+
+        self.eval()
+        sample = self(z, img)
+        sample = (sample + 1.) / 2.
+        sample = ETL.toPIL(sample.squeeze(0).data.cpu())
+        sample.convert('RGB').save(out)
+
+    def _conv_block(self, x, v, block, last=False):
         """
         Multi-operation layer comprised of convolution, normalization (except for
         last layer), and activation (relu except for last which is tanh).

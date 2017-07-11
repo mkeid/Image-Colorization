@@ -49,13 +49,13 @@ class Discriminator(nn.Module):
         """
 
         for i in range(1, 5):
-            x = self.conv_block(x, i, (i > 1))
+            x = self._conv_block(x, i, (i > 1))
 
         x = x.view(-1, 512)
         x = self.project(x)
         return self.predict(x)
 
-    def conv_block(self, x, block, norm=True):
+    def _conv_block(self, x, block, norm=True):
         """
         Multi-operation layer comprised of convolution and normalization (except
         for first layer).
