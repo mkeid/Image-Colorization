@@ -31,7 +31,7 @@ class Discriminator(nn.Module):
         self.relu = nn.LeakyReLU(.2)
 
         # Prediction
-        self.project = nn.Linear(512, 64)
+        self.project = nn.Linear(512 * 4 * 4, 64)
         init.normal(self.project.weight, 0., .02)
         self.predict = nn.Linear(64, 1)
         init.normal(self.predict.weight, 0., .02)
@@ -51,9 +51,10 @@ class Discriminator(nn.Module):
         for i in range(1, 5):
             x = self._conv_block(x, i, (i > 1))
 
-        x = x.view(-1, 512)
+        x = x.view(-1, 512 * 4 * 4)
         x = self.project(x)
-        return self.predict(x)
+        x = self.predict(x)
+        return x
 
     def _conv_block(self, x, block, norm=True):
         """

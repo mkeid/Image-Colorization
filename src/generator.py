@@ -17,7 +17,7 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         # Conv blocks
-        self.conv1 = nn.Conv2d(3, 128, 7, padding=3)
+        self.conv1 = nn.Conv2d(1, 128, 7, padding=3)
         init.normal(self.conv1.weight, 0., .02)
         self.norm1 = nn.BatchNorm2d(128, momentum=.9)
 
@@ -56,10 +56,11 @@ class Generator(nn.Module):
             Tensor          :   Three-channel encoding representing image in HSV.
         """
 
-        x = torch.cat([noise, v], 1)
+        #x = torch.cat([noise, v], 1)
 
+        x = v
         for i in range(1, 7):
-            x = self._conv_block(x, v, i, (i == 6))
+            x = self._conv_block(x, v, i, (i == 1), (i == 6))
 
         x = self.tanh(x)
         return torch.cat([x, v], 1)
@@ -88,7 +89,7 @@ class Generator(nn.Module):
         sample = ETL.toPIL(sample.squeeze(0).data.cpu())
         sample.convert('RGB').save(out)
 
-    def _conv_block(self, x, v, block, last=False):
+    def _conv_block(self, x, v, block, first=False, last=False):
         """
         Multi-operation layer comprised of convolution, normalization (except for
         last layer), and activation (relu except for last which is tanh).
@@ -102,7 +103,9 @@ class Generator(nn.Module):
             Tensor      :   Layer output that has been conved, possibly normalized, and activated.
         """
 
-        x = torch.cat([x, v], 1)
+        if not first:
+            x = torch.cat([x, v], 1)
+
         conv = getattr(self, "conv{}".format(block))
         x = conv(x)
 

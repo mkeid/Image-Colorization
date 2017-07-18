@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import os
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from etl import ETL
 from generator import Generator
@@ -14,13 +15,13 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 parser = argparse.ArgumentParser()
 parser.add_argument('path', help='Training images directory path.')
 
-parser.add_argument('--batch-size', default=16, help='Training batch size.')
-parser.add_argument('--iterations', default=50000, help='Number of iterations to train.')
+parser.add_argument('--batch-size', default=64, help='Training batch size.')
+parser.add_argument('--iterations', default=500000, help='Number of iterations to train.')
 parser.add_argument('--grad-clip', default=.01, help='Bound of which to clip the gradients.')
-parser.add_argument('--image-size', default=128, help='Length to resize training images to (size x size).')
-parser.add_argument('--k-discriminator', default=1, help='Number of times to train discriminator per iteration.')
-parser.add_argument('--k-generator', default=2, help='Number of times to train generator per iteration.')
-parser.add_argument('--learning-rate-d', default=.0001, help='Learning rate for discriminator optimizer.')
+parser.add_argument('--image-size', default=64, help='Length to resize training images to (size x size).')
+parser.add_argument('--k-discriminator', default=5, help='Number of times to train discriminator per iteration.')
+parser.add_argument('--k-generator', default=1, help='Number of times to train generator per iteration.')
+parser.add_argument('--learning-rate-d', default=.0002, help='Learning rate for discriminator optimizer.')
 parser.add_argument('--learning-rate-g', default=.0001, help='Learning rate for generator optimizer.')
 parser.add_argument('--rmsprop-decay', default=.9, help='Weight decay parameter value of RMSProp optimizer.')
 parser.add_argument('--test-image', default=None, help='Path of image to render while training.')
@@ -59,12 +60,13 @@ for iteration in range(args.iterations):
         d_examples, d_targets = loader.next_batch()
         d_noise = torch.Tensor(args.batch_size, 1, args.image_size, args.image_size).uniform_(-1., 1.)
         d_noise = Variable(d_noise).cuda()
-        d_samples = g_net(d_noise, d_examples)
+        d_samples = g_net(d_noise, d_examples).detach()
+
         d_real_pred = d_net(d_targets)
         d_fake_pred = d_net(d_samples)
-
         d_loss = -torch.mean(d_real_pred - d_fake_pred)
         d_loss.backward()
+
         for param in d_net.parameters():
             param.grad.data.clamp(-args.grad_clip, args.grad_clip)
         d_opt.step()
